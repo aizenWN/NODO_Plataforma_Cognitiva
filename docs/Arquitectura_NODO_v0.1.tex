@@ -1,0 +1,389 @@
+\documentclass[10pt]{article}
+
+% Paquetes Base
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx} % Required for inserting images
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr,parskip}
+\usepackage[spanish,es-tabla]{babel} % Español configurado
+\usepackage{float}
+\usepackage[colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=black]{hyperref}
+\usepackage{caption}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage[locale=US]{siunitx}
+
+% Paquetes adicionales para Código Fuente Profesional
+\usepackage{xcolor}
+\usepackage{listings}
+
+% Configuración de siunitx
+\sisetup{output-decimal-marker = {.}}
+
+% Configuración de colores para el código fuente
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{estilocodigo}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=estilocodigo}
+
+% Configuración de Margen y Encabezado
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead[L]{}
+\fancyhead[R]{\includegraphics[width=2cm]{Logo NODO prueba.png}}
+
+% Titulo
+\title{\textbf{Documentación Técnica Arquitectónica}\\Proyecto NODO: Plataforma Cognitiva Modular v0.1}
+\author{\textbf{Martín Alejandro Márquez Pínto}\\Ingeniería Robótica (3er Semestre) - Universidad de Guadalajara}
+\date{14 de Febrero de 2026}
+
+\begin{document}
+\maketitle
+
+\vspace*{\baselineskip}
+\hrule height 1.5pt
+\vspace*{\baselineskip}
+
+\begin{abstract}
+El presente documento detalla la arquitectura fundacional de NODO (v0.1), una plataforma robótica escalable diseñada mediante \textit{Clean Architecture} y Programación Orientada a Objetos en C++. El proyecto establece las bases operativas de hardware y software para evolucionar progresivamente desde un sistema reactivo básico hasta una entidad con procesamiento cognitivo multimodal y aprendizaje automático.
+\end{abstract}
+
+\tableofcontents
+\thispagestyle{fancy}
+
+\newpage
+
+\section{Introducción}
+El proyecto NODO nace bajo la visión de desarrollar un asistente/acompañante tecnológico de uso personal. Al ser un proyecto a largo plazo proyectado para escalar durante la formación académica en ingeniería, se estableció como requisito indispensable abandonar las prácticas de programación de aficionados (código monolítico bloqueante) e implementar estándares de la industria desde el día uno.
+
+El paradigma seleccionado es el modelo \textbf{IPO} (Input, Process, Output), implementado mediante un microcontrolador que delega responsabilidades a módulos independientes. El objetivo de la versión 0.1 es lograr un \textit{Minimum Viable Product} (MVP) capaz de percibir su entorno (audio), procesar la información lógicamente (máquina de estados) y emitir una respuesta visual (interfaz OLED).
+
+\section{Especificaciones de Hardware (v0.1)}
+El hardware base fue seleccionado por su accesibilidad y documentación técnica, ideal para la fase de prototipado temprano (\textit{Cerebro Reptiliano}).
+
+\begin{itemize}
+    \item \textbf{Microcontrolador Base:} Arduino UNO (ATmega328P).
+    \item \textbf{Sensor Auditivo (Input):} Módulo de micrófono amplificador operacional \textbf{MAX4466}. A diferencia de sensores digitales comerciales, este entrega una onda analógica real. Para evitar ruido electromagnético de la línea USB (5V), se alimenta mediante el regulador interno de \SI{3.3}{\volt} del Arduino.
+    \item \textbf{Interfaz Visual (Output):} Pantalla OLED de 0.96 pulgadas con controlador \textbf{SSD1306}. La comunicación se realiza mediante el protocolo I2C, optimizando el uso de pines del microcontrolador.
+\end{itemize}
+
+\subsection{Esquemático de Conexiones}
+\begin{itemize}
+    \item \textbf{MAX4466:} \texttt{VCC $\rightarrow$ 3.3V} | \texttt{GND $\rightarrow$ GND} | \texttt{OUT $\rightarrow$ A0}
+    \item \textbf{OLED SSD1306:} \texttt{VCC $\rightarrow$ 5V} | \texttt{GND $\rightarrow$ GND} | \texttt{SDA $\rightarrow$ A4} | \texttt{SCL $\rightarrow$ A5}
+\end{itemize}
+
+\section{Arquitectura de Software}
+El entorno de desarrollo utilizado es \textbf{Visual Studio Code} con la extensión \textbf{PlatformIO}. Esta decisión permite abandonar el entorno clásico de Arduino y abrazar el uso de gestores de dependencias y modularización profunda.
+
+\subsection{Reglas Críticas de Desarrollo}
+\begin{enumerate}
+    \item \textbf{Prohibición de retrasos bloqueantes:} Está estrictamente prohibido el uso de la función \texttt{delay()}. Todo evento temporal debe gestionarse mediante contadores diferenciales usando la función \texttt{millis()}.
+    \item \textbf{Arquitectura Limpia:} El archivo principal (\texttt{main.cpp}) actúa únicamente como director de orquesta. La lógica matemática, procesamiento de señales y rutinas gráficas están encapsuladas en librerías privadas en C++ dentro del directorio \texttt{/lib}.
+    \item \textbf{DSP (Digital Signal Processing):} Para la lectura analógica, se implementó un algoritmo de muestreo por ventana de tiempo (\SI{50}{\milli\second}) que calcula la amplitud pico a pico, fungiendo como un filtro de ruido ambiental para evitar falsos positivos.
+\end{enumerate}
+
+\newpage
+\section{Implementación del Código Fuente}
+
+A continuación, se detalla el código base de la versión 0.1, el cual está respaldado bajo control de versiones en GitHub.
+
+\subsection{Configuración del Entorno (\texttt{platformio.ini})}
+El archivo de inicialización gestiona automáticamente la descarga de librerías y configura la velocidad del Monitor Serial para evitar cuellos de botella en la lectura de audio.
+
+\begin{lstlisting}[language=make, caption=Configuración en platformio.ini]
+[env:uno]
+platform = atmelavr
+board = uno
+framework = arduino
+monitor_speed = 115200
+lib_deps = 
+	adafruit/Adafruit GFX Library @ ^1.11.9
+	adafruit/Adafruit SSD1306 @ ^2.5.9
+\end{lstlisting}
+
+\subsection{Módulo de Entrada: \texttt{ProcesadorAudio}}
+Este módulo encapsula la lectura de hardware y las matemáticas necesarias para transformar el voltaje analógico en una variable booleana de evento (ruido fuerte detectado).
+
+\begin{lstlisting}[language=C++, caption=lib/ProcesadorAudio/ProcesadorAudio.h]
+#ifndef PROCESADOR_AUDIO_H
+#define PROCESADOR_AUDIO_H
+#include <Arduino.h>
+
+class ProcesadorAudio {
+  private:
+    int pinMicrofono;
+    int umbralDeteccion;
+    int ventanaTiempo;
+
+  public:
+    ProcesadorAudio(int pin, int umbral);
+    void inicializar();
+    int obtenerAmplitud();
+    bool detectarEventoFuerte();
+};
+#endif
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++, caption=lib/ProcesadorAudio/ProcesadorAudio.cpp]
+#include "ProcesadorAudio.h"
+
+ProcesadorAudio::ProcesadorAudio(int pin, int umbral) {
+    pinMicrofono = pin;
+    umbralDeteccion = umbral;
+    ventanaTiempo = 50; // Muestreo de 50 ms
+}
+
+void ProcesadorAudio::inicializar() {
+    pinMode(pinMicrofono, INPUT);
+}
+
+int ProcesadorAudio::obtenerAmplitud() {
+    unsigned long inicioMillis = millis();
+    int valorMaximo = 0;
+    int valorMinimo = 1024;
+
+    while (millis() - inicioMillis < (unsigned long)ventanaTiempo) {
+        int lectura = analogRead(pinMicrofono);
+        if (lectura > valorMaximo) valorMaximo = lectura;
+        if (lectura < valorMinimo) valorMinimo = lectura;
+    }
+    return (valorMaximo - valorMinimo);
+}
+
+bool ProcesadorAudio::detectarEventoFuerte() {
+    int amplitudActual = obtenerAmplitud();
+    return (amplitudActual > umbralDeteccion);
+}
+\end{lstlisting}
+
+\subsection{Módulo Central: \texttt{MaquinaEstados}}
+El cerebro del sistema. Utiliza una Máquina de Estados Finitos (FSM) basada en temporizadores de hardware interno, lo que garantiza que el sistema permanezca reactivo sin importar en qué estado se encuentre.
+
+\begin{lstlisting}[language=C++, caption=lib/MaquinaEstados/MaquinaEstados.h]
+#ifndef MAQUINA_ESTADOS_H
+#define MAQUINA_ESTADOS_H
+#include <Arduino.h>
+
+enum EstadoNodo {
+    DURMIENDO,
+    FELIZ
+};
+
+class MaquinaEstados {
+  private:
+    EstadoNodo estadoActual;
+    unsigned long tiempoUltimoCambio;
+    unsigned long duracionFeliz;
+
+  public:
+    MaquinaEstados();
+    void inicializar();
+    void procesarEventoAudio(bool escuchoFuerte);
+    void actualizar();
+    EstadoNodo obtenerEstadoActual();
+};
+#endif
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++, caption=lib/MaquinaEstados/MaquinaEstados.cpp]
+#include "MaquinaEstados.h"
+
+MaquinaEstados::MaquinaEstados() {
+    estadoActual = DURMIENDO;
+    tiempoUltimoCambio = 0;
+    duracionFeliz = 3000; // 3 segundos de duracion
+}
+
+void MaquinaEstados::inicializar() {
+    estadoActual = DURMIENDO;
+}
+
+void MaquinaEstados::procesarEventoAudio(bool escuchoFuerte) {
+    if (escuchoFuerte && estadoActual == DURMIENDO) {
+        estadoActual = FELIZ;
+        tiempoUltimoCambio = millis();
+    }
+}
+
+void MaquinaEstados::actualizar() {
+    if (estadoActual == FELIZ) {
+        if (millis() - tiempoUltimoCambio >= duracionFeliz) {
+            estadoActual = DURMIENDO;
+        }
+    }
+}
+
+EstadoNodo MaquinaEstados::obtenerEstadoActual() {
+    return estadoActual;
+}
+\end{lstlisting}
+
+\subsection{Módulo de Salida: \texttt{GestorPantalla}}
+Controla la Interfaz de Usuario. Incorpora una lógica \textit{Anti-Flicker} para evitar el parpadeo enviando comandos I2C a la pantalla única y exclusivamente cuando el módulo \texttt{MaquinaEstados} reporta un cambio de actitud.
+
+\begin{lstlisting}[language=C++, caption=lib/GestorPantalla/GestorPantalla.h]
+#ifndef GESTOR_PANTALLA_H
+#define GESTOR_PANTALLA_H
+#include <Arduino.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <MaquinaEstados.h>
+
+class GestorPantalla {
+  private:
+    Adafruit_SSD1306 display;
+    EstadoNodo estadoAnterior;
+    void dibujarCaraDurmiendo();
+    void dibujarCaraFeliz();
+
+  public:
+    GestorPantalla();
+    void inicializar();
+    void actualizar(EstadoNodo estadoActual);
+};
+#endif
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++, caption=lib/GestorPantalla/GestorPantalla.cpp]
+#include "GestorPantalla.h"
+
+GestorPantalla::GestorPantalla() : display(128, 64, &Wire, -1) {
+    estadoAnterior = (EstadoNodo)-1; 
+}
+
+void GestorPantalla::inicializar() {
+    if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+        for(;;); // Bucle infinito si falla
+    }
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(20, 30);
+    display.println("Iniciando NODO...");
+    display.display();
+    delay(1000); 
+}
+
+void GestorPantalla::actualizar(EstadoNodo estadoActual) {
+    if (estadoActual != estadoAnterior) {
+        display.clearDisplay();
+        if (estadoActual == DURMIENDO) {
+            dibujarCaraDurmiendo();
+        } else if (estadoActual == FELIZ) {
+            dibujarCaraFeliz();
+        }
+        display.display(); 
+        estadoAnterior = estadoActual; 
+    }
+}
+
+void GestorPantalla::dibujarCaraDurmiendo() {
+    display.drawLine(30, 32, 50, 32, SSD1306_WHITE);
+    display.drawLine(78, 32, 98, 32, SSD1306_WHITE);
+    display.setCursor(100, 10);
+    display.print("z");
+}
+
+void GestorPantalla::dibujarCaraFeliz() {
+    display.fillCircle(40, 32, 10, SSD1306_WHITE);
+    display.fillCircle(88, 32, 10, SSD1306_WHITE);
+    display.drawPixel(64, 45, SSD1306_WHITE);
+    display.drawPixel(63, 44, SSD1306_WHITE);
+    display.drawPixel(65, 44, SSD1306_WHITE);
+}
+\end{lstlisting}
+
+\subsection{Archivo Principal: \texttt{main.cpp}}
+El núcleo de ejecución del microcontrolador. Mantiene la limpieza arquitectónica delegando las tareas a los módulos correspondientes en un ciclo ininterrumpido.
+
+\begin{lstlisting}[language=C++, caption=src/main.cpp]
+// Nacimiento de NODO (Nombre Clave) el 14/02/2026 "Plataforma Cognitiva Modular" by Marquez Pinto Martin Alejandro.
+
+#include <Arduino.h>
+#include <ProcesadorAudio.h>
+#include <MaquinaEstados.h>
+#include <GestorPantalla.h>
+
+ProcesadorAudio oidoDeNodo(A0, 250); 
+MaquinaEstados cerebroDeNodo;
+GestorPantalla rostroDeNodo;
+
+void setup() {
+  Serial.begin(115200);
+  rostroDeNodo.inicializar(); 
+  oidoDeNodo.inicializar();
+  cerebroDeNodo.inicializar();
+}
+
+void loop() {
+  // 1. INPUT
+  bool huboAplauso = oidoDeNodo.detectarEventoFuerte();
+  
+  // 2. PROCESS
+  cerebroDeNodo.procesarEventoAudio(huboAplauso);
+  cerebroDeNodo.actualizar();
+
+  // 3. OUTPUT
+  EstadoNodo humorActual = cerebroDeNodo.obtenerEstadoActual();
+  rostroDeNodo.actualizar(humorActual);
+}
+\end{lstlisting}
+
+\newpage
+\section{Hoja de Ruta (Roadmap)}
+El desarrollo de NODO seguirá una curva progresiva en las siguientes versiones iterativas:
+\begin{itemize}
+    \item \textbf{v0.2 (Memoria Emocional):} Incorporación de un contador de estrés. Si el micrófono detecta múltiples eventos auditivos fuertes en una ventana de tiempo reducida (ej. 3 aplausos en 10 segundos), la Máquina de Estados transicionará a un nuevo estado \texttt{ENOJADO/ESTRESADO}.
+    \item \textbf{v0.3 (Experiencia de Usuario Animada):} Implementación de algoritmos de números seudoaleatorios (\texttt{random()}) para generar parpadeos esporádicos y variaciones en la pantalla OLED, sin usar demoras bloqueantes.
+    \item \textbf{v0.4 (Expansión Sensorial):} Agregado de nuevos periféricos, potencialmente sensores ultrasónicos (HC-SR04) para detección de proximidad y servomotores para gesticulación física.
+    \item \textbf{Versiones Futuras (Cerebro Cognitivo):} Migración estratégica a una arquitectura híbrida comunicando el \textit{Cerebro Reptiliano} actual (Arduino/ESP32) mediante serial/WiFi con un \textit{Cerebro Cognitivo} (Raspberry Pi/Jetson Nano) para delegar cargas de Machine Learning (OpenCV, procesamiento de lenguaje natural).
+\end{itemize}
+
+\vspace{1cm}
+\hrule
+\vspace{0.5cm}
+
+\section{Anexo: Prompt Maestro de Continuidad AI}
+\textit{Este fragmento debe ser utilizado al iniciar una nueva sesión con un Asistente de Inteligencia Artificial para recuperar instantáneamente el contexto y la metodología de trabajo del proyecto a largo plazo.}
+
+\vspace{0.5cm}
+\begin{center}
+\fbox{
+    \begin{minipage}{0.9\textwidth}
+    \textbf{PROMPT PARA COPIAR Y PEGAR:} \newline\newline
+    "Actúa como mi Arquitecto de Software Senior y tutor de Ingeniería Robótica. Soy Martín Alejandro Márquez Pínto, estudiante de robótica. Estamos desarrollando a 'NODO: Plataforma Cognitiva Modular'. \newline\newline
+    Adjunto el código actual en GitHub y el documento en PDF de su arquitectura base. \newline\newline
+    \textbf{Tus reglas estrictas de desarrollo son:}\newline
+    1. Mantener el tono profesional, empático y explicativo de la industria.\newline
+    2. Mantener la 'Clean Architecture'. El \texttt{main.cpp} solo coordina (IPO: Input, Process, Output). Toda la lógica vive en clases dentro de la carpeta \texttt{lib/} de PlatformIO.\newline
+    3. Está ESTRICTAMENTE PROHIBIDO usar \texttt{delay()}. Todo el manejo de tiempo debe hacerse con \texttt{millis()} y variables de estado para no bloquear el procesador.\newline
+    4. Explica el 'por qué' detrás del hardware o del código (ej. ruido eléctrico, debouncing, etc.) antes de darme las soluciones.\newline\newline
+    Revisa los archivos. Queremos retomar el Roadmap en la siguiente versión lógica. ¿Por dónde empezamos?"
+    \end{minipage}
+}
+\end{center}
+
+\end{document}
