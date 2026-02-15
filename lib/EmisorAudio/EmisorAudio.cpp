@@ -27,3 +27,11 @@ void EmisorAudio::reproducirSonidoFeliz() {
     tone(pinBuzzer, NOTA_DO_ALTO, 150);
     delay(150);
 }
+
+void EmisorAudio::reproducirSonidoEnojado() {
+    // Sonido grave y molesto (Buzzer de error)
+    tone(pinBuzzer, 150, 400); // Frecuencia baja, sonido largo
+    delay(450);
+    tone(pinBuzzer, 100, 600); // Frecuencia aun mas baja
+    delay(650);
+}

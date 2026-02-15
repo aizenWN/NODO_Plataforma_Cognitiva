@@ -7,7 +7,7 @@
 #include <GestorPantalla.h>
 #include <EmisorAudio.h> // 1. INCLUIMOS LA NUEVA LIBRERIA
 
-ProcesadorAudio oidoDeNodo(A0, 250); 
+ProcesadorAudio oidoDeNodo(A0, 600); // 600ms de "pausa" entre detecciones 
 MaquinaEstados cerebroDeNodo;
 GestorPantalla rostroDeNodo;
 EmisorAudio vozDeNodo(3); // 2. CREAMOS EL OBJETO EN EL PIN 3
@@ -42,9 +42,12 @@ void loop() {
   // Actualizamos la pantalla
   rostroDeNodo.actualizar(humorActual);
 
-  // 5. LOGICA DEL SONIDO FELIZ (Solo suena una vez al cambiar de estado)
-  if (humorActual == FELIZ && estadoAnterior == DURMIENDO) {
+  // 5. LOGICA DEL SONIDO (Solo suena una vez al cambiar de estado)
+  if (humorActual == FELIZ && estadoAnterior != FELIZ) {
       vozDeNodo.reproducirSonidoFeliz();
+  } 
+  else if (humorActual == ENOJADO && estadoAnterior != ENOJADO) {
+      vozDeNodo.reproducirSonidoEnojado();
   }
   
   // Guardamos el estado para el siguiente ciclo de loop

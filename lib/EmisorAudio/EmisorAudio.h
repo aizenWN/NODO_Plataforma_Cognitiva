@@ -23,5 +23,6 @@ class EmisorAudio {
     // Las dos funciones que pediste
     void reproducirCancionInicio();
     void reproducirSonidoFeliz();
+    void reproducirSonidoEnojado();
 };
 #endif

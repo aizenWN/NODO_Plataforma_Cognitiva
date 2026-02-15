@@ -1,28 +1,33 @@
 #ifndef MAQUINA_ESTADOS_H
 #define MAQUINA_ESTADOS_H
-
 #include <Arduino.h>
 
-// Definimos los posibles "estados de ánimo" de NODO
+// 1. Agregamos la nueva emocion al diccionario
 enum EstadoNodo {
     DURMIENDO,
-    FELIZ
+    FELIZ,
+    ENOJADO  // <--- ESTO ES LO QUE EL COMPILADOR NO ENCONTRABA
 };
 
 class MaquinaEstados {
   private:
     EstadoNodo estadoActual;
-    unsigned long tiempoUltimoCambio; // Para saber a qué hora cambió de estado
-    unsigned long duracionFeliz;      // Cuánto tiempo durará feliz (en milisegundos)
+    
+    // Temporizadores de estados
+    unsigned long tiempoUltimoCambio;
+    unsigned long duracionFeliz;
+    unsigned long duracionEnojado; // <--- Faltaba esto
+
+    // 2. LA MEMORIA DE NODO (Variables para el estres)
+    int contadorAplausos;              // <--- Faltaba esto
+    unsigned long tiempoPrimerAplauso; // <--- Faltaba esto
+    unsigned long ventanaEstres;       // <--- Faltaba esto
 
   public:
     MaquinaEstados();
-    
     void inicializar();
-    void procesarEventoAudio(bool escuchoFuerte); // NODO reacciona al audio
-    void actualizar();                            // NODO piensa por sí mismo
-    
-    EstadoNodo obtenerEstadoActual();             // Para que otros módulos sepan cómo está NODO
+    void procesarEventoAudio(bool escuchoFuerte);
+    void actualizar();
+    EstadoNodo obtenerEstadoActual();
 };
-
 #endif
