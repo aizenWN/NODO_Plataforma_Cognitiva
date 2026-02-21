@@ -27,7 +27,17 @@ El `.` en `add .` le dice a GitHub que **GUARDE TODO** los archivos del proyecto
 
 [Enlace a mi GitHub: NODO_Plataforma_Cognitiva](https://github.com/aizenWN/NODO_Plataforma_Cognitiva)
 
-# Guardado de Datos en PC y advertencias
+# Guardado de Datos en PC/Laptop y advertencias
 ``
 Para guardar todos los archivo presionar la combinacion de teclas: `Control + k` y despues `s`
 (Desapareceran los circulos blancos en los archivos)
+
+## Enlace PC/Laptop de proyecto
+Para enlazar este proyecto a nuevos dispositivos abro una nueva terminal de VSC:
+
+1. Ejecutar `git clone` [URL DEL REPOSITORIO EN GITHUB] esto descarga el proyecto identico.
+2. Se trabaja en alguno de los dispositivos -> termina -> ``git add .`` -> ``git commit`` -> ``git push``
+3. Trabajas en otro dispositivo -> ``git pull`` (Descarga los cambios) -> trabajas/terminas -> ``git push``
+4. Cambias de dispositivo -> ``git pull``
+
+En pocas palabras, primero enlazamos/descargamos con ``git clone`` en el dispositivo, acabamos y subimos con ``git push`` y por ultimo actualizamos con ``git pull`` para repetir el proceso.
